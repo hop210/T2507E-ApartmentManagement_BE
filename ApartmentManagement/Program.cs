@@ -24,6 +24,18 @@ builder.Services.AddScoped<IBuildingService, BuildingService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Cấp quyền cho Frontend gọi API (CORS)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()  // Cho phép mọi cổng (localhost:3000, 5173...)
+              .AllowAnyHeader()  // Cho phép gửi mọi loại dữ liệu
+              .AllowAnyMethod(); // Cho phép mọi lệnh (GET, POST, PUT, DELETE)
+    });
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -38,6 +50,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+// Kích hoạt CORS
+app.UseCors("AllowFrontend");
 
 app.UseHttpsRedirection();
 
