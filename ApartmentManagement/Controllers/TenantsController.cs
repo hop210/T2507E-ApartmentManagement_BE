@@ -1,9 +1,11 @@
 ﻿using ApartmentManagement.DTOs.Tenant;
 using ApartmentManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApartmentManagement.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class TenantsController : ControllerBase

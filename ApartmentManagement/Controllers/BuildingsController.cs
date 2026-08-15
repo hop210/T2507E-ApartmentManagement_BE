@@ -1,12 +1,13 @@
 ﻿using ApartmentManagement.DTOs.Building;
 using ApartmentManagement.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApartmentManagement.Controllers
-{ 
-
-[Route("api/[controller]")]
-[ApiController]
+{
+    [Authorize]
+    [Route("api/[controller]")]
+    [ApiController]
 public class BuildingsController : ControllerBase
 {
         private readonly IBuildingService _service;

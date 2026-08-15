@@ -4,15 +4,16 @@ using ApartmentManagement.Repositories;
 using ApartmentManagement.Repositories.Impl;
 using ApartmentManagement.Services;
 using ApartmentManagement.Services.Impl;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+
 // Đăng ký ApplicationDbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -27,45 +28,97 @@ builder.Services.AddScoped<IBuildingService, BuildingService>();
 builder.Services.AddScoped<IApartmentService, ApartmentService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 
-// Đăng ký Swagger
+// Đăng ký Native OpenAPI của .NET 10
+builder.Services.AddOpenApi();
+
+// Đăng ký Swagger (Cú pháp chuẩn của .NET 10 / Swashbuckle 10 / Microsoft.OpenApi 2.x)
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Description = "Nhập JWT token theo định dạng: Bearer {token}",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+    });
+});
 
 // Cấp quyền cho Frontend gọi API (CORS)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.AllowAnyOrigin()  // Cho phép mọi cổng (localhost:3000, 5173...)
-              .AllowAnyHeader()  // Cho phép gửi mọi loại dữ liệu
-              .AllowAnyMethod(); // Cho phép mọi lệnh (GET, POST, PUT, DELETE)
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
+// CẤU HÌNH JWT BẢO MẬT
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+});
 
 var app = builder.Build();
 
-// GẮN LƯỚI LỌC NGAY TẠI ĐÂY (Nên đặt ở vị trí cao nhất có thể trong HTTP Pipeline)
+// GẮN LƯỚI LỌC BẮT LỖI
 app.UseMiddleware<GlobalExceptionMiddleware>();
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
 
 if (app.Environment.IsDevelopment())
 {
-    // Bật giao diện Swagger
+    // Native OpenAPI endpoints
+    app.MapOpenApi();
+
+    // Giao diện Swagger
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-// Kích hoạt CORS
-app.UseCors("AllowFrontend");
 
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 
+// Xác thực trước, phân quyền sau
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// --- ĐOẠN KHỞI TẠO DỮ LIỆU MẪU (DATA SEEDING) ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        await DataSeeder.SeedDataAsync(context);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Lỗi khi khởi tạo dữ liệu mẫu: {ex.Message}");
+    }
+}
 
 app.Run();

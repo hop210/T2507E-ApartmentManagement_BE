@@ -14,5 +14,6 @@ namespace ApartmentManagement.Data
         public DbSet<Building> Buildings { get; set; }
         public DbSet<Apartment> Apartments { get; set; }
         public DbSet<Tenant> Tenants { get; set; }
+        public DbSet<User> User { get; set; }
     }
 }
