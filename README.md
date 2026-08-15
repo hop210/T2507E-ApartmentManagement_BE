@@ -1,52 +1,47 @@
-# 🏢 Hệ thống Quản lý Căn hộ (Apartment Management - Backend)
+# 🏢 Apartment Management API
 
-Dự án Backend cung cấp RESTful API cho hệ thống quản lý chung cư, căn hộ. Dự án được xây dựng tuân thủ kiến trúc phân lớp N-Tier Architecture (Controller > Service > Repository) để đảm bảo tính mở rộng và dễ bảo trì.
+Hệ thống Backend quản lý khu chung cư, cung cấp các API chuẩn RESTful để quản lý tòa nhà, căn hộ, cư dân và tích hợp hệ thống xác thực bảo mật.
 
-## 🛠 Công nghệ sử dụng
-* **Framework:** ASP.NET Core Web API
-* **Database:** Microsoft SQL Server (triển khai qua Docker Container)
-* **ORM:** Entity Framework Core (EF Core)
-* **API Documentation:** Swagger / OpenAPI
+## 🚀 Công nghệ sử dụng
+* **Framework:** .NET 10 (ASP.NET Core Web API)
+* **Database:** SQL Server & Entity Framework Core
+* **Authentication/Authorization:** JSON Web Token (JWT) & Role-based Auth
+* **Documentation:** Swagger (OpenAPI v2.x chuẩn .NET 10)
+* **Security:** Isopoh.Cryptography.Argon2 (Mã hóa mật khẩu)
 
----
+## ✨ Tính năng nổi bật
+* **Quản lý cốt lõi:** Thêm, sửa, xóa, thống kê (Tòa nhà, Căn hộ, Cư dân).
+* **Bảo mật JWT:** Hệ thống cấp phát Token an toàn cho các phiên đăng nhập.
+* **Phân quyền vai trò (Role-Based Access Control):** 
+  * `ADMIN`: Toàn quyền quản trị hệ thống.
+  * `MANAGER`: Quản lý cấp trung (Thêm, Sửa dữ liệu).
+  * `RESIDENT`: Cư dân (Chỉ có quyền xem dữ liệu).
+* **Auto Data Seeding:** Tự động khởi tạo tài khoản quản trị viên (`admin`) khi hệ thống khởi chạy lần đầu.
+* **CORS Policy:** Đã cấu hình mở cổng kết nối an toàn cho các ứng dụng Frontend.
 
-## ⚙️ Yêu cầu hệ thống (Prerequisites)
-Để chạy dự án, máy tính của bạn cần cài đặt sẵn:
-* Visual Studio 2022 (khuyến nghị phiên bản mới nhất).
-* .NET SDK tương thích.
-* **Docker Desktop** (Bắt buộc phải bật và đang chạy ngầm).
+## 🛠 Hướng dẫn chạy dự án
 
----
+1. **Clone repository:**
+   ```bash
+   git clone <link-repo-cua-ban>
+   cd ApartmentManagement
+   ```
 
-## 🚀 Hướng dẫn cài đặt và chạy dự án (Dành cho Team)
+2. **Cấu hình Database:**
+   Mở file `appsettings.json` và cập nhật chuỗi kết nối `DefaultConnection` cho phù hợp với SQL Server của bạn.
 
-**Bước 1: Tải source code về máy**
-Mở thư mục muốn lưu dự án, chuột phải chọn `Open in Terminal` (hoặc Git Bash) và chạy lệnh:
-`git clone https://github.com/hop210/T2507E-ApartmentManagement_BE.git`
+3. **Cập nhật Database (Migration):**
+   ```bash
+   dotnet ef database update
+   ```
 
-**Bước 2: Dựng Database (SQL Server) bằng Docker**
-Mở Developer PowerShell (hoặc Terminal thông thường) và chạy lệnh sau để tạo một container SQL Server hoàn toàn mới chạy trên cổng `1433`:
-`docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Apartment@123" -p 1433:1433 --name sqlserver_db_ApartmentManagement -d mcr.microsoft.com/mssql/server:2022-latest`
+4. **Chạy ứng dụng:**
+   ```bash
+   dotnet run
+   ```
+   *Tài khoản Admin mặc định để test API:*
+   * **Username:** `admin`
+   * **Password:** `admin123`
 
-> **Lưu ý:** Đảm bảo máy bạn chưa có phần mềm nào khác (như SQL Server cài trực tiếp) đang chiếm dụng cổng `1433`.
-
-**Bước 3: Đồng bộ các bảng (Migrations) vào Database**
-Mở file Solution (`.sln`) bằng Visual Studio.
-Trên thanh Menu, chọn `Tools` > `NuGet Package Manager` > `Package Manager Console`.
-Chạy lệnh sau để hệ thống tự động đọc file Migrations và tạo các bảng (`Buildings`, `Users`...) vào SQL Server vừa dựng:
-`Update-Database`
-
-**Bước 4: Chạy ứng dụng**
-Nhìn lên thanh công cụ trên cùng của Visual Studio, bấm vào mũi tên xổ xuống cạnh nút Play.
-Đảm bảo bạn **CHỌN cấu hình chạy là `http`** (không chọn Container hay Docker).
-Nhấn **F5** để khởi chạy ứng dụng.
-
----
-
-## 📖 Hướng dẫn Test API (Swagger)
-Khi ứng dụng khởi chạy thành công, một cửa sổ Console đen sẽ bật lên và thông báo số cổng mạng đang lắng nghe (Ví dụ: `Now listening on: http://localhost:5131`).
-
-Mở trình duyệt web và truy cập vào đường dẫn sau để vào giao diện test API:
-`http://localhost:<số-cổng-của-bạn>/swagger`
-
-Tại đây, bạn có thể gọi trực tiếp các lệnh GET, POST, PUT, DELETE để thao tác với cơ sở dữ liệu.
+5. **Test API:**
+   Truy cập `https://localhost:<port>/swagger` để sử dụng giao diện Swagger UI. Nhập Token lấy được từ API Login vào nút **Authorize** để mở khóa các API yêu cầu quyền quản trị.
