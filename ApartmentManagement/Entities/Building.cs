@@ -7,5 +7,7 @@
         public string Address { get; set; } = string.Empty;
         public int TotalFloors { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+        public ICollection<Apartment>? Apartments { get; set; }
     }
 }

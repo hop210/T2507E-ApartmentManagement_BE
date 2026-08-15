@@ -1,4 +1,4 @@
-﻿using ApartmentManagement.DTOs;
+﻿using ApartmentManagement.DTOs.Building;
 
 namespace ApartmentManagement.Services
 {

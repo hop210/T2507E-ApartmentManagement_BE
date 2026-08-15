@@ -1,4 +1,4 @@
-﻿using ApartmentManagement.DTOs;
+﻿using ApartmentManagement.DTOs.Building;
 using ApartmentManagement.Entities;
 using ApartmentManagement.Repositories;
 

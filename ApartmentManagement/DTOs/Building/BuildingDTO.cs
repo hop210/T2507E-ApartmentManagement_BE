@@ -1,4 +1,4 @@
-﻿namespace ApartmentManagement.DTOs
+﻿namespace ApartmentManagement.DTOs.Building
 {
     public class BuildingDTO
     {

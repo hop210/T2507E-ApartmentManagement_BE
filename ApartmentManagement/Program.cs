@@ -16,9 +16,15 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Đăng ký Repository và Service
+// Đăng ký Repository
 builder.Services.AddScoped<IBuildingRepository, BuildingRepository>();
+builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
+builder.Services.AddScoped<ITenantRepository, TenantRepository>();
+
+// Đăng ký Service
 builder.Services.AddScoped<IBuildingService, BuildingService>();
+builder.Services.AddScoped<IApartmentService, ApartmentService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
 
 // Đăng ký Swagger
 builder.Services.AddEndpointsApiExplorer();

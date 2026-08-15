@@ -1,4 +1,4 @@
-﻿using ApartmentManagement.DTOs;
+﻿using ApartmentManagement.DTOs.Building;
 using ApartmentManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 
