@@ -1,4 +1,5 @@
 using ApartmentManagement.Data;
+using ApartmentManagement.Middlewares;
 using ApartmentManagement.Repositories;
 using ApartmentManagement.Repositories.Impl;
 using ApartmentManagement.Services;
@@ -44,6 +45,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// GẮN LƯỚI LỌC NGAY TẠI ĐÂY (Nên đặt ở vị trí cao nhất có thể trong HTTP Pipeline)
+app.UseMiddleware<GlobalExceptionMiddleware>();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

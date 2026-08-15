@@ -1,4 +1,5 @@
 ﻿using ApartmentManagement.DTOs.Apartment;
+using ApartmentManagement.DTOs.Apartment.Parameters;
 using ApartmentManagement.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,9 +17,9 @@ namespace ApartmentManagement.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] ApartmentParameters parameters)
         {
-            var apartments = await _service.GetAllApartmentsAsync();
+            var apartments = await _service.GetAllApartmentsAsync(parameters);
             return Ok(apartments);
         }
 

@@ -1,4 +1,5 @@
 ﻿using ApartmentManagement.DTOs.Apartment;
+using ApartmentManagement.DTOs.Apartment.Parameters;
 using ApartmentManagement.Entities;
 using ApartmentManagement.Repositories;
 
@@ -13,11 +14,11 @@ namespace ApartmentManagement.Services.Impl
             _repository = repository;
         }
 
-        public async Task<IEnumerable<ApartmentDTO>> GetAllApartmentsAsync()
+        public async Task<IEnumerable<ApartmentDTO>> GetAllApartmentsAsync(ApartmentParameters parameters)
         {
-            var apartments = await _repository.GetAllAsync();
+            // Truyền parameters xuống cho Repository xử lý
+            var apartments = await _repository.GetAllAsync(parameters);
 
-            // Chuyển đổi từ Entity sang DTO
             return apartments.Select(a => new ApartmentDTO
             {
                 Id = a.Id,

@@ -1,4 +1,5 @@
 ﻿using ApartmentManagement.Data;
+using ApartmentManagement.DTOs.Apartment.Parameters;
 using ApartmentManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +14,34 @@ namespace ApartmentManagement.Repositories.Impl
             _context = context;
         }
 
-        public async Task<IEnumerable<Apartment>> GetAllAsync()
+        public async Task<IEnumerable<Apartment>> GetAllAsync(ApartmentParameters parameters)
         {
-            // Include(a => a.Building) để lấy luôn thông tin Tòa nhà nếu cần
-            return await _context.Apartments.Include(a => a.Building).ToListAsync();
+            // Bắt đầu tạo câu truy vấn (chưa gọi xuống DB ngay)
+            var query = _context.Apartments.AsQueryable();
+
+            // 1. Lọc theo Trạng thái (Nếu có gửi lên)
+            if (parameters.Status.HasValue)
+            {
+                query = query.Where(a => a.Status == parameters.Status.Value);
+            }
+
+            // 2. Lọc theo Giá tối thiểu
+            if (parameters.MinPrice.HasValue)
+            {
+                query = query.Where(a => a.RentPrice >= parameters.MinPrice.Value);
+            }
+
+            // 3. Lọc theo Giá tối đa
+            if (parameters.MaxPrice.HasValue)
+            {
+                query = query.Where(a => a.RentPrice <= parameters.MaxPrice.Value);
+            }
+
+            // 4. Phân trang (Skip và Take) & Thực thi truy vấn
+            return await query
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
         }
 
         public async Task<Apartment> AddAsync(Apartment apartment)
