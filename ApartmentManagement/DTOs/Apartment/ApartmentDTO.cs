@@ -9,6 +9,6 @@ namespace ApartmentManagement.DTOs.Apartment
         public double Area { get; set; }
         public decimal RentPrice { get; set; }
         public ApartmentStatus Status { get; set; }
-        public int BuildingId { get; set; }
+        public int FloorId { get; set; }
     }
 }

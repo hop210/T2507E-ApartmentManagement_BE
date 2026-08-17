@@ -1,5 +1,5 @@
 ﻿using ApartmentManagement.Entities;
-using Isopoh.Cryptography.Argon2;
+using ApartmentManagement.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace ApartmentManagement.Data
@@ -8,25 +8,57 @@ namespace ApartmentManagement.Data
     {
         public static async Task SeedDataAsync(ApplicationDbContext context)
         {
-            // Kiểm tra xem bảng Users đã có tài khoản ADMIN nào chưa
-            if (!await context.Users.AnyAsync(u => u.Role == "ADMIN"))
+            // 1. Tạo tài khoản Admin mặc định (nếu chưa có)
+            if (!await context.Users.AnyAsync(u => u.Username == "admin"))
             {
-                // Nếu chưa có, tạo mới một tài khoản Admin 
                 var adminUser = new User
                 {
                     Username = "admin",
-                    PasswordHash = Argon2.Hash("admin123"), // Mật khẩu mặc định là admin123
+                    // Chú ý: Ở thực tế phải dùng thuật toán mã hóa (VD: Argon2)
+                    // Đây chỉ là hash tạm để test
+                    PasswordHash = "admin123",
                     FullName = "System Administrator",
-                    Email = "admin@apartment.com",
-                    Phone = "0999999999",
                     Role = "ADMIN",
-                    IsActive = true,
-                    CreatedAt = DateTime.Now
+                    IsActive = true
+                };
+                await context.Users.AddAsync(adminUser);
+            }
+
+            // 2. Tạo dữ liệu mẫu Tòa nhà -> Tầng -> Căn hộ (nếu chưa có)
+            if (!await context.Buildings.AnyAsync())
+            {
+                var buildingA = new Building
+                {
+                    Name = "Tòa A - Alpha",
+                    Address = "Số 1, Đường X, Hà Nội",
+                    TotalFloors = 2,
+                    Floors = new List<Floor>
+                    {
+                        new Floor
+                        {
+                            FloorNumber = "Tầng 1",
+                            Apartments = new List<Apartment>
+                            {
+                                new Apartment { ApartmentNumber = "A101", Area = 65.5, RentPrice = 5000000, Status = ApartmentStatus.Available },
+                                new Apartment { ApartmentNumber = "A102", Area = 75.0, RentPrice = 6500000, Status = ApartmentStatus.Available }
+                            }
+                        },
+                        new Floor
+                        {
+                            FloorNumber = "Tầng 2",
+                            Apartments = new List<Apartment>
+                            {
+                                new Apartment { ApartmentNumber = "A201", Area = 65.5, RentPrice = 5200000, Status = ApartmentStatus.Available }
+                            }
+                        }
+                    }
                 };
 
-                context.Users.Add(adminUser);
-                await context.SaveChangesAsync();
+                await context.Buildings.AddAsync(buildingA);
             }
+
+            // Lưu toàn bộ dữ liệu mẫu xuống Database
+            await context.SaveChangesAsync();
         }
     }
 }

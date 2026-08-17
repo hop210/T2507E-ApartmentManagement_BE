@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ApartmentManagement.DTOs.Tenant
+namespace ApartmentManagement.DTOs.Resident
 {
-    public class CreateTenantDTO
+    public class CreateResidentDTO
     {
         [Required(ErrorMessage = "Họ và tên không được để trống.")]
         [StringLength(100, MinimumLength = 3, ErrorMessage = "Tên phải từ 3 đến 100 ký tự.")]

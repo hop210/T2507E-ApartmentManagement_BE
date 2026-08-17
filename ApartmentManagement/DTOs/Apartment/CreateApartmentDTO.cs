@@ -19,6 +19,6 @@ namespace ApartmentManagement.DTOs.Apartment
         public ApartmentStatus Status { get; set; } = ApartmentStatus.Available;
 
         [Required(ErrorMessage = "Vui lòng chọn tòa nhà.")]
-        public int BuildingId { get; set; }
+        public int FloorId { get; set; }
     }
 }

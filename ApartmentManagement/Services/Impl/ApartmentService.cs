@@ -26,7 +26,7 @@ namespace ApartmentManagement.Services.Impl
                 Area = a.Area,
                 RentPrice = a.RentPrice,
                 Status = a.Status,
-                BuildingId = a.BuildingId
+                FloorId = a.FloorId
             });
         }
 
@@ -38,7 +38,7 @@ namespace ApartmentManagement.Services.Impl
                 Area = dto.Area,
                 RentPrice = dto.RentPrice,
                 Status = dto.Status,
-                BuildingId = dto.BuildingId
+                FloorId = dto.FloorId
             };
 
             var created = await _repository.AddAsync(apartment);
@@ -50,7 +50,7 @@ namespace ApartmentManagement.Services.Impl
                 Area = created.Area,
                 RentPrice = created.RentPrice,
                 Status = dto.Status,
-                BuildingId = created.BuildingId
+                FloorId = created.FloorId
             };
         }
         public async Task<ApartmentDTO?> GetApartmentByIdAsync(int id)
@@ -65,7 +65,7 @@ namespace ApartmentManagement.Services.Impl
                 Area = apartment.Area,
                 RentPrice = apartment.RentPrice,
                 Status = apartment.Status,
-                BuildingId = apartment.BuildingId
+                FloorId = apartment.FloorId
             };
         }
 

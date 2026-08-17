@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ApartmentManagement.Entities
 {
-    public class Tenant
+    public class Resident
     {
         [Key]
         public int Id { get; set; }
@@ -16,11 +16,10 @@ namespace ApartmentManagement.Entities
         public string PhoneNumber { get; set; } = string.Empty;
 
         [MaxLength(100)]
-        public string IdentityCard { get; set; } = string.Empty; // CCCD/CMND
+        public string IdentityCard { get; set; } = string.Empty;
 
-        // Khóa ngoại liên kết với Căn hộ
+        // Khóa ngoại liên kết lên Căn hộ
         public int ApartmentId { get; set; }
-
         [ForeignKey("ApartmentId")]
         public Apartment? Apartment { get; set; }
     }

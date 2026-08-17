@@ -11,21 +11,21 @@ namespace ApartmentManagement.Entities
 
         [Required]
         [MaxLength(50)]
-        public string ApartmentNumber { get; set; } = string.Empty; // Số phòng (VD: P101, A-202)
+        public string ApartmentNumber { get; set; } = string.Empty;
 
-        public double Area { get; set; } // Diện tích (m2)
+        public double Area { get; set; }
 
         [Column(TypeName = "decimal(18,2)")]
-        public decimal RentPrice { get; set; } // Giá thuê
+        public decimal RentPrice { get; set; }
 
-        // Thêm trường Status
         public ApartmentStatus Status { get; set; } = ApartmentStatus.Available;
 
-        // --- Bắt đầu phần thiết lập Khóa ngoại (Foreign Key) ---
-        public int BuildingId { get; set; }
+        // Khóa ngoại liên kết lên Tầng
+        public int FloorId { get; set; }
+        [ForeignKey("FloorId")]
+        public Floor? Floor { get; set; }
 
-        [ForeignKey("BuildingId")]
-        public Building? Building { get; set; }
-        public ICollection<Tenant>? Tenants { get; set; }
+        // Liên kết với Cư dân
+        public ICollection<Resident>? Residents { get; set; }
     }
 }

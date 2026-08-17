@@ -8,6 +8,7 @@
         public int TotalFloors { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        public ICollection<Apartment>? Apartments { get; set; }
+        // Một Tòa nhà có nhiều Tầng
+        public ICollection<Floor>? Floors { get; set; }
     }
 }
