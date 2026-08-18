@@ -2,11 +2,15 @@
 
 ## 🚀 Công nghệ sử dụng
 
+## 🚀 Công nghệ sử dụng
+
 * **Framework:** .NET 10 (ASP.NET Core Web API)
-* **Database:** SQL Server & Entity Framework Core
+* **Database:** SQL Server & Entity Framework Core (Code-First)
+* **Architecture / Patterns:** Repository Pattern, Dependency Injection (DI), Data Transfer Object (DTO)
 * **Authentication/Authorization:** JWT & Role-based Authorization
-* **Documentation:** Swagger / OpenAPI
 * **Password Security:** Isopoh.Cryptography.Argon2
+* **File Management:** Xử lý Multipart/form-data (IFormFile), lưu trữ và quản lý file tĩnh cục bộ (Hợp đồng PDF, Ảnh bảo trì)
+* **Documentation:** Swagger / OpenAPI
 
 ## 🛠 Hướng dẫn chạy dự án
 

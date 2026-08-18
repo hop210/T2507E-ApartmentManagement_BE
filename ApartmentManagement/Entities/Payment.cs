@@ -19,5 +19,8 @@ namespace ApartmentManagement.Entities
 
         [MaxLength(50)]
         public string PaymentMethod { get; set; } = "CASH"; // Tiền mặt, Chuyển khoản
+
+        [MaxLength(100)] 
+        public string ReferenceCode { get; set; } = string.Empty;
     }
 }

@@ -27,6 +27,9 @@ builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<IUtilityRepository, UtilityRepository>();
 builder.Services.AddScoped<IUtilityUsageRepository, UtilityUsageRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IMaintenanceRequestRepository, MaintenanceRequestRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 // Đăng ký Service
 builder.Services.AddScoped<IBuildingService, BuildingService>();
@@ -37,6 +40,9 @@ builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IUtilityService, UtilityService>();
 builder.Services.AddScoped<IUtilityUsageService, UtilityUsageService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IMaintenanceRequestService, MaintenanceRequestService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // Đăng ký Native OpenAPI của .NET 10
 builder.Services.AddOpenApi();
