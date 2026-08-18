@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ApartmentManagement.Entities
 {
-    public class ServiceUsage
+    public class UtilityUsage
     {
         [Key]
         public int Id { get; set; }
@@ -12,15 +12,15 @@ namespace ApartmentManagement.Entities
         [ForeignKey("ApartmentId")]
         public Apartment? Apartment { get; set; }
 
-        public int ServiceId { get; set; }
-        [ForeignKey("ServiceId")]
-        public Service? Service { get; set; }
+        public int UtilityId { get; set; } // Đã đổi từ ServiceId
+        [ForeignKey("UtilityId")]
+        public Utility? Utility { get; set; }
 
         public int Month { get; set; }
         public int Year { get; set; }
 
-        public double OldIndicator { get; set; } // Chỉ số cũ (Ví dụ: điện tháng trước)
-        public double NewIndicator { get; set; } // Chỉ số mới
-        public double UsageAmount { get; set; }  // Mức tiêu thụ thực tế
+        public double OldIndicator { get; set; }
+        public double NewIndicator { get; set; }
+        public double UsageAmount { get; set; }
     }
 }

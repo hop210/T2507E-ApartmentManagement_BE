@@ -361,3 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Bỏ qua thư mục chứa file upload (Hợp đồng, ảnh tĩnh)
+**/wwwroot/contracts/
+**/wwwroot/images/
+
+# Bỏ qua lịch sử Migration 
+**/Migrations/

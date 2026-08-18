@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ApartmentManagement.Entities
 {
-    public class Service
+    public class Utility
     {
         [Key]
         public int Id { get; set; }
@@ -20,6 +20,6 @@ namespace ApartmentManagement.Entities
 
         public bool IsActive { get; set; } = true;
 
-        public ICollection<ServiceUsage>? ServiceUsages { get; set; }
+        public ICollection<UtilityUsage>? UtilityUsages { get; set; }
     }
 }

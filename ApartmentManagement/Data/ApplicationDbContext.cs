@@ -15,8 +15,8 @@ namespace ApartmentManagement.Data
 
         // Các bảng mới thêm
         public DbSet<Contract> Contracts { get; set; }
-        public DbSet<Service> Services { get; set; }
-        public DbSet<ServiceUsage> ServiceUsages { get; set; }
+        public DbSet<Utility> Utilities { get; set; }
+        public DbSet<UtilityUsage> UtilityUsages { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<InvoiceDetail> InvoiceDetails { get; set; }
         public DbSet<Payment> Payments { get; set; }

@@ -23,12 +23,16 @@ builder.Services.AddScoped<IBuildingRepository, BuildingRepository>();
 builder.Services.AddScoped<IFloorRepository, FloorRepository>();
 builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
 builder.Services.AddScoped<IResidentRepository, ResidentRepository>();
+builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<IUtilityRepository, UtilityRepository>();
 
 // Đăng ký Service
 builder.Services.AddScoped<IBuildingService, BuildingService>();
 builder.Services.AddScoped<IFloorService, FloorService>();
 builder.Services.AddScoped<IApartmentService, ApartmentService>();
 builder.Services.AddScoped<IResidentService, ResidentService>();
+builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IUtilityService, UtilityService>();
 
 // Đăng ký Native OpenAPI của .NET 10
 builder.Services.AddOpenApi();
@@ -101,6 +105,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 // Xác thực trước, phân quyền sau
 app.UseAuthentication();
