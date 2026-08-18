@@ -8,7 +8,7 @@ namespace ApartmentManagement.DTOs.Utility
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [Range(0, double.MaxValue, ErrorMessage = "Đơn giá phải lớn hơn hoặc bằng 0")]
+        [Range(typeof(decimal), "0", "1000000000", ErrorMessage = "Đơn giá phải lớn hơn hoặc bằng 0")]
         public decimal UnitPrice { get; set; }
 
         [Required]

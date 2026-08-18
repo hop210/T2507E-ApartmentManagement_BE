@@ -25,6 +25,8 @@ builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
 builder.Services.AddScoped<IResidentRepository, ResidentRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<IUtilityRepository, UtilityRepository>();
+builder.Services.AddScoped<IUtilityUsageRepository, UtilityUsageRepository>();
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 
 // Đăng ký Service
 builder.Services.AddScoped<IBuildingService, BuildingService>();
@@ -33,6 +35,8 @@ builder.Services.AddScoped<IApartmentService, ApartmentService>();
 builder.Services.AddScoped<IResidentService, ResidentService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IUtilityService, UtilityService>();
+builder.Services.AddScoped<IUtilityUsageService, UtilityUsageService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 
 // Đăng ký Native OpenAPI của .NET 10
 builder.Services.AddOpenApi();
@@ -120,6 +124,7 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
+        context.Database.Migrate(); // THÊM DÒNG NÀY ĐỂ BẢO VỆ DB
         await DataSeeder.SeedDataAsync(context);
     }
     catch (Exception ex)

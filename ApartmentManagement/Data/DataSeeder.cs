@@ -1,6 +1,7 @@
 ﻿using ApartmentManagement.Entities;
 using ApartmentManagement.Enums;
 using Microsoft.EntityFrameworkCore;
+using Isopoh.Cryptography.Argon2;
 
 namespace ApartmentManagement.Data
 {
@@ -14,9 +15,8 @@ namespace ApartmentManagement.Data
                 var adminUser = new User
                 {
                     Username = "admin",
-                    // Chú ý: Ở thực tế phải dùng thuật toán mã hóa (VD: Argon2)
-                    // Đây chỉ là hash tạm để test
-                    PasswordHash = "admin123",
+                    // Thay BCrypt bằng Argon2 cho đồng bộ với AuthController
+                    PasswordHash = Argon2.Hash("admin123"),
                     FullName = "System Administrator",
                     Role = "ADMIN",
                     IsActive = true
