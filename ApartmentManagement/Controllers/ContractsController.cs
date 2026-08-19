@@ -45,5 +45,23 @@ namespace ApartmentManagement.Controllers
             var result = await _service.CreateContractAsync(dto);
             return Ok(result);
         }
+
+        [Authorize(Roles = "ADMIN,MANAGER")]
+        [HttpPut("{id}/extend")]
+        public async Task<IActionResult> ExtendContract(int id, [FromBody] ExtendContractDTO dto)
+        {
+            var result = await _service.ExtendContractAsync(id, dto);
+            if (!result) return NotFound("Không tìm thấy hợp đồng hợp lệ để gia hạn.");
+            return Ok(new { message = "Đã gia hạn hợp đồng thành công!" });
+        }
+
+        [Authorize(Roles = "ADMIN,MANAGER")]
+        [HttpPut("{id}/terminate")]
+        public async Task<IActionResult> TerminateContract(int id)
+        {
+            var result = await _service.TerminateContractAsync(id);
+            if (!result) return NotFound("Không tìm thấy hợp đồng.");
+            return Ok(new { message = "Đã thanh lý hợp đồng và cập nhật trạng thái phòng thành công!" });
+        }
     }
 }

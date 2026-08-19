@@ -1,9 +1,11 @@
-﻿using ApartmentManagement.DTOs.Contract;
+﻿using ApartmentManagement.Data;
+using ApartmentManagement.DTOs.Contract;
 using ApartmentManagement.Entities;
 using ApartmentManagement.Enums;
 using ApartmentManagement.Repositories;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApartmentManagement.Services.Impl
 {
@@ -11,12 +13,17 @@ namespace ApartmentManagement.Services.Impl
     {
         private readonly IContractRepository _repository;
         private readonly IWebHostEnvironment _env;
+        private readonly ApplicationDbContext _context;
 
         // Tiêm IWebHostEnvironment để lấy đường dẫn thư mục gốc của dự án
-        public ContractService(IContractRepository repository, IWebHostEnvironment env)
+        public ContractService(
+            IContractRepository repository,
+            IWebHostEnvironment env,
+            ApplicationDbContext context)
         {
             _repository = repository;
             _env = env;
+            _context = context; // Gán giá trị để sử dụng bên dưới
         }
 
         public async Task<IEnumerable<ContractDTO>> GetAllContractsAsync()
@@ -107,6 +114,60 @@ namespace ApartmentManagement.Services.Impl
                 Status = c.Status.ToString(),
                 DocumentUrl = c.DocumentUrl
             };
+        }
+        public async Task<bool> ExtendContractAsync(int id, ExtendContractDTO dto)
+        {
+            var contract = await _context.Contracts.FindAsync(id);
+            if (contract == null) return false;
+
+            // Chỉ cho phép gia hạn nếu hợp đồng đang Active (Dùng Enum chuẩn theo file của bạn)
+            if (contract.Status != ContractStatus.Active)
+            {
+                throw new Exception("Chỉ có thể gia hạn hợp đồng đang trong trạng thái Hoạt động.");
+            }
+
+            // Cập nhật ngày kết thúc
+            contract.EndDate = dto.NewEndDate;
+
+            _context.Contracts.Update(contract);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> TerminateContractAsync(int id)
+        {
+            var contract = await _context.Contracts.FindAsync(id);
+            if (contract == null) return false;
+
+            // 1. Chuyển trạng thái hợp đồng thành Terminated (Dùng Enum)
+            contract.Status = ContractStatus.Terminated; // Tên Enum này tuỳ thuộc vào file Enums/ContractStatus.cs của bạn
+            contract.EndDate = DateTime.Now; // Chốt ngày thanh lý là hôm nay
+
+            _context.Contracts.Update(contract);
+
+            // 2. Logic trả lại phòng trống
+            var apartment = await _context.Apartments.FindAsync(contract.ApartmentId);
+            if (apartment != null)
+            {
+                // Ghi chú: Chỗ này mình dùng ApartmentStatus.Available. 
+                // Bạn nhớ check file Apartment.cs xem trạng thái phòng bạn đang lưu là kiểu gì để sửa lại cho khớp nhé!
+                apartment.Status = ApartmentStatus.Available;
+                _context.Apartments.Update(apartment);
+            }
+            // 3. Logic dọn dẹp: Ngắt kết nối Cư dân khỏi căn hộ
+            var resident = await _context.Residents.FindAsync(contract.ResidentId);
+            if (resident != null)
+            {
+                // Cắt đứt liên kết phòng (Nếu Entity Resident của bạn thiết kế ApartmentId là int?)
+                resident.ApartmentId = null;
+
+                // NẾU bạn có trường trạng thái cư dân, có thể đánh dấu họ đã dọn đi
+                // resident.Status = "MovedOut"; hoặc resident.IsActive = false;
+
+                _context.Residents.Update(resident);
+            }
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

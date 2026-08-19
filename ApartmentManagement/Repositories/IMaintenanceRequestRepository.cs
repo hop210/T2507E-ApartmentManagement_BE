@@ -7,5 +7,6 @@ namespace ApartmentManagement.Repositories
         Task<IEnumerable<MaintenanceRequest>> GetAllAsync();
         Task<MaintenanceRequest?> GetByIdAsync(int id);
         Task<MaintenanceRequest> AddAsync(MaintenanceRequest request);
+        Task<MaintenanceRequest> UpdateAsync(MaintenanceRequest request);
     }
 }

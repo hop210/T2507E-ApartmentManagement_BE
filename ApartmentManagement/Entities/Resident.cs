@@ -19,7 +19,7 @@ namespace ApartmentManagement.Entities
         public string IdentityCard { get; set; } = string.Empty;
 
         // Khóa ngoại liên kết lên Căn hộ
-        public int ApartmentId { get; set; }
+        public int? ApartmentId { get; set; }
         [ForeignKey("ApartmentId")]
         public Apartment? Apartment { get; set; }
     }

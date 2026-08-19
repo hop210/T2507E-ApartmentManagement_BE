@@ -1,9 +1,11 @@
-﻿using ApartmentManagement.DTOs.Maintenance;
+﻿using ApartmentManagement.Data;
+using ApartmentManagement.DTOs.Maintenance;
 using ApartmentManagement.Entities;
 using ApartmentManagement.Enums;
 using ApartmentManagement.Repositories;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApartmentManagement.Services.Impl
 {
@@ -11,12 +13,20 @@ namespace ApartmentManagement.Services.Impl
     {
         private readonly IMaintenanceRequestRepository _repository;
         private readonly IWebHostEnvironment _env;
+        private readonly ApplicationDbContext _context;
 
-        public MaintenanceRequestService(IMaintenanceRequestRepository repository, IWebHostEnvironment env)
+        // 2. Tiêm ApplicationDbContext vào Constructor
+        public MaintenanceRequestService(
+            IMaintenanceRequestRepository repository,
+            IWebHostEnvironment env,
+            ApplicationDbContext context)
         {
             _repository = repository;
             _env = env;
+            _context = context; // 3. Gán giá trị để sử dụng
         }
+
+        
 
         public async Task<IEnumerable<MaintenanceRequestDTO>> GetAllRequestsAsync()
         {
@@ -97,6 +107,63 @@ namespace ApartmentManagement.Services.Impl
                 // Rút trích danh sách đường link ảnh trả về cho Frontend
                 ImageUrls = request.Images?.Select(img => img.ImageUrl).ToList() ?? new List<string>()
             };
+        }
+        public async Task<bool> AssignStaffAsync(int id, AssignMaintenanceDTO dto)
+        {
+            var request = await _repository.GetByIdAsync(id);
+            if (request == null) return false;
+
+            // Gán ID nhân viên kỹ thuật
+            request.AssignedStaffId = dto.StaffId;
+
+            await _repository.UpdateAsync(request);
+            return true;
+        }
+
+        public async Task<bool> UpdateStatusAsync(int id, UpdateMaintenanceStatusDTO dto)
+        {
+            // Dùng _context để include cả Images vào, giúp EF Core theo dõi và thêm ảnh mới
+            var request = await _context.MaintenanceRequests
+                .Include(m => m.Images)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (request == null) return false;
+
+            // Cập nhật trạng thái
+            request.Status = dto.Status;
+
+            // Xử lý lưu ảnh kết quả nếu nhân viên kỹ thuật có upload
+            if (dto.ResultImages != null && dto.ResultImages.Any())
+            {
+                var webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var uploadsFolder = Path.Combine(webRootPath, "images", "maintenance");
+
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                foreach (var file in dto.ResultImages)
+                {
+                    if (file.Length > 0)
+                    {
+                        // Thêm chữ "result_" để phân biệt với ảnh cư dân gửi lúc đầu
+                        var uniqueFileName = Guid.NewGuid().ToString() + "_result_" + file.FileName;
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(fileStream);
+                        }
+
+                        request.Images ??= new List<MaintenanceImage>();
+                        request.Images.Add(new MaintenanceImage
+                        {
+                            ImageUrl = $"/images/maintenance/{uniqueFileName}"
+                        });
+                    }
+                }
+            }
+
+            await _repository.UpdateAsync(request);
+            return true;
         }
     }
 }

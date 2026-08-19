@@ -12,8 +12,6 @@ namespace ApartmentManagement.Data
         public DbSet<Floor> Floors { get; set; }
         public DbSet<Apartment> Apartments { get; set; }
         public DbSet<Resident> Residents { get; set; }
-
-        // Các bảng mới thêm
         public DbSet<Contract> Contracts { get; set; }
         public DbSet<Utility> Utilities { get; set; }
         public DbSet<UtilityUsage> UtilityUsages { get; set; }
@@ -23,6 +21,7 @@ namespace ApartmentManagement.Data
         public DbSet<MaintenanceRequest> MaintenanceRequests { get; set; }
         public DbSet<MaintenanceImage> MaintenanceImages { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<FamilyMember> FamilyMembers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

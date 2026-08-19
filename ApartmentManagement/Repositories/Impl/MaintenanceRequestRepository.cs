@@ -38,5 +38,11 @@ namespace ApartmentManagement.Repositories.Impl
             await _context.SaveChangesAsync();
             return request;
         }
+        public async Task<MaintenanceRequest> UpdateAsync(MaintenanceRequest request)
+        {
+            _context.MaintenanceRequests.Update(request);
+            await _context.SaveChangesAsync();
+            return request;
+        }
     }
 }
