@@ -35,8 +35,18 @@ namespace ApartmentManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateResidentDTO dto)
         {
-            var result = await _service.CreateResidentAsync(dto);
-            return Ok(result);
+            try
+            {
+                // Thử gọi hàm tạo (hoặc hồi sinh) Cư dân
+                var result = await _service.CreateResidentAsync(dto);
+                return Ok(result); // Trả về 200 OK nếu thành công
+            }
+            catch (Exception ex)
+            {
+                // Nếu Service ném ra lỗi (ví dụ: CCCD đã tồn tại và đang hoạt động)
+                // Hệ thống sẽ bắt lấy và trả về mã 400 kèm câu thông báo lỗi
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]

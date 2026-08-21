@@ -42,8 +42,18 @@ namespace ApartmentManagement.Controllers
                 return BadRequest("Ngày kết thúc hợp đồng phải lớn hơn ngày bắt đầu.");
             }
 
-            var result = await _service.CreateContractAsync(dto);
-            return Ok(result);
+            try
+            {
+                // Gọi xuống Service để xử lý nghiệp vụ tạo hợp đồng
+                var result = await _service.CreateContractAsync(dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Nếu Service ném ra lỗi (Ví dụ: "Cư dân này đã được xếp vào phòng..."),
+                // Lưới catch này sẽ tóm lấy và trả về mã 400 Bad Request kèm theo lời nhắn lỗi
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [Authorize(Roles = "ADMIN,MANAGER")]

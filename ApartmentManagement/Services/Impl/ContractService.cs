@@ -3,6 +3,8 @@ using ApartmentManagement.DTOs.Contract;
 using ApartmentManagement.Entities;
 using ApartmentManagement.Enums;
 using ApartmentManagement.Repositories;
+using Minio;
+using Minio.DataModel.Args;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -12,18 +14,18 @@ namespace ApartmentManagement.Services.Impl
     public class ContractService : IContractService
     {
         private readonly IContractRepository _repository;
-        private readonly IWebHostEnvironment _env;
+        private readonly IMinioClient _minioClient;
         private readonly ApplicationDbContext _context;
 
-        // Tiêm IWebHostEnvironment để lấy đường dẫn thư mục gốc của dự án
+        // Tiêm IMinioClient để giao tiếp với server lưu trữ MinIO
         public ContractService(
             IContractRepository repository,
-            IWebHostEnvironment env,
+            IMinioClient minioClient,
             ApplicationDbContext context)
         {
             _repository = repository;
-            _env = env;
-            _context = context; // Gán giá trị để sử dụng bên dưới
+            _minioClient = minioClient;
+            _context = context;
         }
 
         public async Task<IEnumerable<ContractDTO>> GetAllContractsAsync()
@@ -38,37 +40,70 @@ namespace ApartmentManagement.Services.Impl
             return contract == null ? null : MapToDTO(contract);
         }
 
+
         public async Task<ContractDTO> CreateContractAsync(CreateContractDTO dto)
         {
-            string documentUrl = "";
-
-            // Xử lý upload file PDF nếu có đính kèm
-            if (dto.DocumentFile != null && dto.DocumentFile.Length > 0)
+            // 1. Lấy và kiểm tra thông tin Căn hộ
+            var apartment = await _context.Apartments.FindAsync(dto.ApartmentId);
+            if (apartment == null)
             {
-                // Tìm đến thư mục wwwroot/contracts (Tự tạo nếu chưa có)
-                var webRootPath = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                var uploadsFolder = Path.Combine(webRootPath, "contracts");
-
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                // Gắn mã Guid để tên file là độc nhất vô nhị
-                var uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.DocumentFile.FileName;
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                // Copy file từ Request vào ổ cứng
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await dto.DocumentFile.CopyToAsync(fileStream);
-                }
-
-                // Đường dẫn tương đối lưu vào DB
-                documentUrl = $"/contracts/{uniqueFileName}";
+                throw new Exception("Căn hộ không tồn tại trong hệ thống.");
             }
 
-            // Tạo thực thể Hợp đồng
+            if (apartment.Status != ApartmentStatus.Available)
+            {
+                // Ném lỗi ngay nếu phòng đang có người ở hoặc đang bảo trì
+                throw new Exception($"Căn hộ đang ở trạng thái {apartment.Status}, không thể tạo hợp đồng mới! Vui lòng chọn phòng trống.");
+            }
+
+            // 2. Lấy và kiểm tra thông tin Cư dân
+            var resident = await _context.Residents.FindAsync(dto.ResidentId);
+            if (resident == null)
+            {
+                throw new Exception("Cư dân không tồn tại.");
+            }
+            if (resident.ApartmentId != null)
+            {
+                throw new Exception($"Cư dân này đã được xếp vào phòng (ID Phòng: {resident.ApartmentId}). Không thể tạo thêm hợp đồng!");
+            }
+
+            string documentUrl = "";
+
+            // 3. Xử lý upload file PDF lên MinIO
+            if (dto.DocumentFile != null && dto.DocumentFile.Length > 0)
+            {
+                string bucketName = "contracts";
+
+                // Kiểm tra bucket tồn tại chưa, chưa có thì tự động tạo
+                bool found = await _minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucketName));
+                if (!found)
+                {
+                    await _minioClient.MakeBucketAsync(new MakeBucketArgs().WithBucket(bucketName));
+                } // <--- CHÚ Ý: Ngoặc đóng của khối if nằm ngay đây, ngắt lệnh tạo Bucket.
+
+                // Đưa lệnh SetPolicy ra ngoài if để hệ thống LUÔN LUÔN cấp quyền Public cho dù Bucket đã tạo từ trước hay chưa.
+                string policyJson = $@"{{""Version"":""2012-10-17"",""Statement"":[{{""Action"":[""s3:GetObject""],""Effect"":""Allow"",""Principal"":{{""AWS"":[""*""]}},""Resource"":[""arn:aws:s3:::{bucketName}/*""]}}]}}";
+                await _minioClient.SetPolicyAsync(new SetPolicyArgs().WithBucket(bucketName).WithPolicy(policyJson));
+
+                // Gắn mã Guid để tên file không bao giờ bị trùng
+                var uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.DocumentFile.FileName;
+
+                // Bắt đầu đẩy file lên trạm MinIO
+                using (var stream = dto.DocumentFile.OpenReadStream())
+                {
+                    await _minioClient.PutObjectAsync(new PutObjectArgs()
+                        .WithBucket(bucketName)
+                        .WithObject(uniqueFileName)
+                        .WithStreamData(stream)
+                        .WithObjectSize(stream.Length)
+                        .WithContentType(dto.DocumentFile.ContentType));
+                }
+
+                // Lấy đường dẫn trực tiếp từ MinIO lưu vào DB
+                documentUrl = $"http://localhost:9000/{bucketName}/{uniqueFileName}";
+            }
+
+            // 4. Tạo thực thể Hợp đồng
             var contract = new Contract
             {
                 ApartmentId = dto.ApartmentId,
@@ -77,17 +112,31 @@ namespace ApartmentManagement.Services.Impl
                 EndDate = dto.EndDate,
                 DepositAmount = dto.DepositAmount,
                 RentAmount = dto.RentAmount,
-                Status = ContractStatus.Active, // Mặc định hợp đồng mới là Active
+                Status = ContractStatus.Active,
                 DocumentUrl = documentUrl
             };
 
             var created = await _repository.AddAsync(contract);
 
+            // 5. Cập nhật lại phòng thành "Đã cho thuê" sau khi ký hợp đồng
+            apartment.Status = ApartmentStatus.Rented;
+            _context.Apartments.Update(apartment);
+
+            // 6. Trao chìa khóa: Cập nhật phòng cho Cư dân
+            resident.ApartmentId = apartment.Id;
+            _context.Residents.Update(resident);
+
+            // 7. Lưu toàn bộ 3 thay đổi trên vào DB cùng lúc
+            await _context.SaveChangesAsync();
+
+            // 8. Trả về kết quả hiển thị tên đầy đủ
             return new ContractDTO
             {
                 Id = created.Id,
                 ApartmentId = created.ApartmentId,
+                ApartmentNumber = apartment.ApartmentNumber,
                 ResidentId = created.ResidentId,
+                ResidentName = resident.FullName,
                 StartDate = created.StartDate,
                 EndDate = created.EndDate,
                 DepositAmount = created.DepositAmount,
@@ -96,6 +145,7 @@ namespace ApartmentManagement.Services.Impl
                 DocumentUrl = created.DocumentUrl
             };
         }
+
 
         // Hàm phụ trợ giúp chuyển đổi Entity sang DTO cho gọn code
         private ContractDTO MapToDTO(Contract c)

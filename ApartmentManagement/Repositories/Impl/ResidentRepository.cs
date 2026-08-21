@@ -15,12 +15,14 @@ namespace ApartmentManagement.Repositories.Impl
 
         public async Task<IEnumerable<Resident>> GetAllAsync()
         {
-            return await _context.Residents.ToListAsync();
+            // Thêm .Where(r => r.IsActive) để chỉ lấy những người còn hoạt động
+            return await _context.Residents.Where(r => r.IsActive).ToListAsync();
         }
 
         public async Task<Resident?> GetByIdAsync(int id)
         {
-            return await _context.Residents.FindAsync(id);
+            // Thêm điều kiện r.IsActive để không trả về người đã bị xóa mềm
+            return await _context.Residents.FirstOrDefaultAsync(r => r.Id == id && r.IsActive);
         }
 
         public async Task<Resident> AddAsync(Resident resident)
@@ -38,8 +40,15 @@ namespace ApartmentManagement.Repositories.Impl
 
         public async Task DeleteAsync(Resident resident)
         {
-            _context.Residents.Remove(resident);
+            // Đổi trạng thái
+            resident.IsActive = false;
+            _context.Residents.Update(resident);
             await _context.SaveChangesAsync();
+        }
+        public async Task<Resident?> GetByIdentityCardAsync(string identityCard)
+        {
+            // Tìm theo CCCD, KHÔNG lọc IsActive để lấy được cả người đã nghỉ thuê
+            return await _context.Residents.FirstOrDefaultAsync(r => r.IdentityCard == identityCard);
         }
     }
 }

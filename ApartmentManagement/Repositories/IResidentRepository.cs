@@ -9,5 +9,6 @@ namespace ApartmentManagement.Repositories
         Task<Resident> AddAsync(Resident resident);
         Task UpdateAsync(Resident resident);
         Task DeleteAsync(Resident resident);
+        Task<Resident?> GetByIdentityCardAsync(string identityCard);
     }
 }

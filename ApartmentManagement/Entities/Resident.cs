@@ -18,6 +18,8 @@ namespace ApartmentManagement.Entities
         [MaxLength(100)]
         public string IdentityCard { get; set; } = string.Empty;
 
+        public bool IsActive { get; set; } = true;
+
         // Khóa ngoại liên kết lên Căn hộ
         public int? ApartmentId { get; set; }
         [ForeignKey("ApartmentId")]

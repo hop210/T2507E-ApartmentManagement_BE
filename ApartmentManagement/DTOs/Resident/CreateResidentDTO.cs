@@ -16,7 +16,7 @@ namespace ApartmentManagement.DTOs.Resident
         [StringLength(12, MinimumLength = 9, ErrorMessage = "CCCD/CMND phải có từ 9 đến 12 số.")]
         public string IdentityCard { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Vui lòng chọn căn hộ.")]
-        public int ApartmentId { get; set; }
+      
+        public int? ApartmentId { get; set; }
     }
 }

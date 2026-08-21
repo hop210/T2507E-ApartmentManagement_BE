@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Minio;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -103,6 +104,17 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
     };
 });
+
+builder.Services.AddScoped<IMinioClient>(sp =>
+{
+    return new MinioClient()
+        .WithEndpoint("localhost:9000") // Cổng 9000 là cổng giao tiếp API
+        .WithCredentials("admin", "admin123")
+        .WithSSL(false) // Đang chạy localhost nên không cần SSL
+        .Build();
+});
+
+
 
 var app = builder.Build();
 

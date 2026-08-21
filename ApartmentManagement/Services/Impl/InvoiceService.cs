@@ -32,7 +32,18 @@ namespace ApartmentManagement.Services.Impl
 
         public async Task<InvoiceDTO> CreateInvoiceAsync(CreateInvoiceDTO dto)
         {
-            // 1. Kiểm tra xem tháng này đã xuất hóa đơn chưa
+            // 0. CHỐT CHẶN MỚI: Kiểm tra trực tiếp trạng thái phòng
+            var apartment = await _context.Apartments.FindAsync(dto.ApartmentId);
+            if (apartment == null)
+            {
+                throw new InvalidOperationException("Căn hộ không tồn tại trong hệ thống.");
+            }
+            if (apartment.Status != ApartmentStatus.Rented)
+            {
+                throw new InvalidOperationException($"Không thể xuất hóa đơn! Căn hộ này đang ở trạng thái {apartment.Status} (Không có người ở).");
+            }
+
+            // 1. Kiểm tra xem tháng này đã xuất hóa đơn chưa (Code cũ của bạn)
             var existingInvoice = await _context.Invoices
                 .FirstOrDefaultAsync(i => i.ApartmentId == dto.ApartmentId && i.Month == dto.Month && i.Year == dto.Year);
 
@@ -41,7 +52,7 @@ namespace ApartmentManagement.Services.Impl
                 throw new InvalidOperationException($"Căn hộ {dto.ApartmentId} đã có hóa đơn trong tháng {dto.Month}/{dto.Year}");
             }
 
-            // 2. Tìm Hợp đồng đang hiệu lực để lấy tiền nhà
+            // 2. Tìm Hợp đồng đang hiệu lực để lấy tiền nhà (Code cũ của bạn)
             var activeContract = await _context.Contracts
                 .FirstOrDefaultAsync(c => c.ApartmentId == dto.ApartmentId && c.Status == ContractStatus.Active);
 
@@ -50,13 +61,13 @@ namespace ApartmentManagement.Services.Impl
                 throw new InvalidOperationException("Không thể tạo hóa đơn vì căn hộ này chưa có hợp đồng thuê nhà đang hiệu lực.");
             }
 
-            // 3. Lấy toàn bộ chỉ số điện/nước đã chốt trong tháng
+            // 3. Lấy toàn bộ chỉ số điện/nước đã chốt trong tháng (Code cũ của bạn)
             var usages = await _context.UtilityUsages
                 .Include(u => u.Utility)
                 .Where(u => u.ApartmentId == dto.ApartmentId && u.Month == dto.Month && u.Year == dto.Year)
                 .ToListAsync();
 
-            // 4. Bắt đầu tính toán
+            // 4. Bắt đầu tính toán (Code cũ của bạn)
             decimal totalAmount = 0;
             var invoiceDetails = new List<InvoiceDetail>();
 
@@ -85,7 +96,7 @@ namespace ApartmentManagement.Services.Impl
                 }
             }
 
-            // 5. Khởi tạo đối tượng Hóa đơn tổng
+            // 5. Khởi tạo đối tượng Hóa đơn tổng (Code cũ của bạn)
             var invoice = new Invoice
             {
                 ApartmentId = dto.ApartmentId,
@@ -94,7 +105,7 @@ namespace ApartmentManagement.Services.Impl
                 TotalAmount = totalAmount,
                 Status = InvoiceStatus.Unpaid,
                 DueDate = dto.DueDate,
-                InvoiceDetails = invoiceDetails // EF Core sẽ tự động lưu cả cha lẫn con
+                InvoiceDetails = invoiceDetails
             };
 
             var created = await _repository.AddAsync(invoice);
@@ -102,7 +113,7 @@ namespace ApartmentManagement.Services.Impl
             return MapToDTO(created);
         }
 
-        // Hàm Mapping dùng chung cho gọn code
+        // Hàm Mapping dùng chung cho gọn code (Dán vào ngay dưới hàm CreateInvoiceAsync)
         private InvoiceDTO MapToDTO(Invoice invoice)
         {
             return new InvoiceDTO
