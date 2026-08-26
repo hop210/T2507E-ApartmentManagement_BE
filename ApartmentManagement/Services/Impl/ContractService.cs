@@ -256,6 +256,14 @@ namespace ApartmentManagement.Services.Impl
                     oldContract.Status = ContractStatus.Terminated;
                     oldContract.EndDate = DateTime.Now;
                     _context.Contracts.Update(oldContract);
+
+                    // BỔ SUNG FIX LỖI: Tạm thời chuyển phòng thành Available để lọt qua được cửa ải của hàm CreateContractAsync
+                    var apartment = await _context.Apartments.FindAsync(newContractDto.ApartmentId);
+                    if (apartment != null)
+                    {
+                        apartment.Status = ApartmentStatus.Available;
+                        _context.Apartments.Update(apartment);
+                    }
                 }
 
                 // 3. Vô hiệu hóa Chủ hộ cũ và Cấp bậc Người nhà cũ
@@ -272,7 +280,7 @@ namespace ApartmentManagement.Services.Impl
                     FullName = familyMember.FullName,
                     IdentityCard = familyMember.IdentityCard,
                     PhoneNumber = "", // Người nhà tạm thời chưa có sđt, có thể update sau
-                    ApartmentId = newContractDto.ApartmentId,
+                    ApartmentId = null,
                     IsActive = true
                 };
                 _context.Residents.Add(newResident);
