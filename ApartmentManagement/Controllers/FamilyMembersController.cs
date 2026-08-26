@@ -27,15 +27,8 @@ namespace ApartmentManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> AddMember([FromBody] CreateFamilyMemberDTO dto)
         {
-            try
-            {
-                var result = await _service.AddMemberAsync(dto);
-                return Ok(new { message = "Thêm thành viên thành công!", data = result });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var result = await _service.AddMemberAsync(dto);
+            return Ok(new { message = "Thêm thành viên thành công!", data = result });
         }
 
         [HttpDelete("{id}")]

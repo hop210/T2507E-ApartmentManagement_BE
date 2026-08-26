@@ -32,26 +32,8 @@ namespace ApartmentManagement.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                var result = await _service.CreateUsageAsync(dto);
-                return Ok(new { Message = "Ghi chỉ số thành công!", Data = result });
-            }
-            catch (ArgumentException ex)
-            {
-                // Chỉ số mới nhỏ hơn chỉ số cũ (Lỗi 400)
-                return BadRequest(new { message = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                // Phòng này đã chốt số trong tháng rồi (Lỗi 409 - Xung đột dữ liệu)
-                return Conflict(new { message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                // Các lỗi hệ thống khác
-                return StatusCode(500, new { message = "Lỗi hệ thống: " + ex.Message });
-            }
+            var result = await _service.CreateUsageAsync(dto);
+            return Ok(new { Message = "Ghi chỉ số thành công!", Data = result });
         }
     }
 }

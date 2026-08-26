@@ -24,19 +24,19 @@ namespace ApartmentManagement.Controllers
             return Ok(payments);
         }
 
+        // Bổ sung phân quyền: Chỉ Ban quản lý mới được thu tiền
+        [Authorize(Roles = "ADMIN,MANAGER")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreatePaymentDTO dto)
         {
-            try
+            if (!ModelState.IsValid)
             {
-                var result = await _service.CreatePaymentAsync(dto);
-                return Ok(new { message = "Ghi nhận thanh toán thành công!", data = result });
+                return BadRequest(ModelState);
             }
-            catch (Exception ex)
-            {
-                // Bắt gọn lỗi thanh toán lố hoặc lỗi không tìm thấy hóa đơn trả về FE
-                return BadRequest(new { message = ex.Message });
-            }
+
+            var result = await _service.CreatePaymentAsync(dto);
+
+            return Ok(new { message = "Ghi nhận thanh toán thành công!", data = result });
         }
     }
 }

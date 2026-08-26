@@ -27,15 +27,9 @@ namespace ApartmentManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateNotificationDTO dto)
         {
-            try
-            {
-                var result = await _service.CreateNotificationAsync(dto);
-                return Ok(new { message = "Gửi thông báo thành công!", data = result });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+           
+            var result = await _service.CreateNotificationAsync(dto);
+            return Ok(new { message = "Gửi thông báo thành công!", data = result });
         }
     }
 }

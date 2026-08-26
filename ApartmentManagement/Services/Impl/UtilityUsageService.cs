@@ -1,6 +1,8 @@
 ﻿using ApartmentManagement.DTOs.UtilityUsage;
 using ApartmentManagement.Entities;
 using ApartmentManagement.Repositories;
+using ApartmentManagement.Exceptions;
+using Microsoft.AspNetCore.Http;
 
 namespace ApartmentManagement.Services.Impl
 {
@@ -32,20 +34,20 @@ namespace ApartmentManagement.Services.Impl
 
         public async Task<UtilityUsageDTO?> CreateUsageAsync(CreateUtilityUsageDTO dto)
         {
-            // 1. Validate: Chỉ số mới phải lớn hơn hoặc bằng chỉ số cũ
+            // 1. Validate: Chỉ số mới phải lớn hơn hoặc bằng chỉ số cũ (Lỗi nhập liệu -> 400 Bad Request)
             if (dto.NewIndicator < dto.OldIndicator)
             {
-                throw new ArgumentException("Chỉ số mới không được nhỏ hơn chỉ số cũ.");
+                throw new AppException("Chỉ số mới không được nhỏ hơn chỉ số cũ.", StatusCodes.Status400BadRequest);
             }
 
-            // 2. Validate: Kiểm tra tháng này đã chốt số chưa
+            // 2. Validate: Kiểm tra tháng này đã chốt số chưa (Lỗi trùng lặp dữ liệu -> 409 Conflict)
             var existingRecord = await _repository.GetByMonthYearAsync(dto.ApartmentId, dto.UtilityId, dto.Month, dto.Year);
             if (existingRecord != null)
             {
-                throw new InvalidOperationException($"Phòng {dto.ApartmentId} đã chốt chỉ số cho dịch vụ này trong tháng {dto.Month}/{dto.Year}.");
+                throw new AppException($"Phòng {dto.ApartmentId} đã chốt chỉ số cho dịch vụ này trong tháng {dto.Month}/{dto.Year}.", StatusCodes.Status409Conflict);
             }
 
-            // 3. Logic tính toán tự động
+            // 3. Logic tính toán tự động (Giữ nguyên)
             double calculatedUsage = dto.NewIndicator - dto.OldIndicator;
 
             var usage = new UtilityUsage
@@ -56,13 +58,14 @@ namespace ApartmentManagement.Services.Impl
                 Year = dto.Year,
                 OldIndicator = dto.OldIndicator,
                 NewIndicator = dto.NewIndicator,
-                UsageAmount = calculatedUsage // Lưu mức tiêu thụ tự động tính
+                UsageAmount = calculatedUsage
             };
 
             var created = await _repository.AddAsync(usage);
 
             return new UtilityUsageDTO
             {
+                // ... (phần map DTO giữ nguyên)
                 Id = created.Id,
                 ApartmentId = created.ApartmentId,
                 UtilityId = created.UtilityId,

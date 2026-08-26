@@ -32,7 +32,7 @@ namespace ApartmentManagement.Controllers
             // 1. Kiểm tra xem Username đã có ai xài chưa
             if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
             {
-                return BadRequest("Tên đăng nhập này đã tồn tại!");
+                throw new ApartmentManagement.Exceptions.AppException("Tên đăng nhập này đã tồn tại!", StatusCodes.Status409Conflict);
             }
 
             // 2. Mã hóa mật khẩu bằng Argon2 xịn sò
@@ -62,13 +62,13 @@ namespace ApartmentManagement.Controllers
             var user = await _context.Users.SingleOrDefaultAsync(u => u.Username == dto.Username);
             if (user == null)
             {
-                return Unauthorized("Tài khoản hoặc mật khẩu không chính xác.");
+                throw new ApartmentManagement.Exceptions.AppException("Tài khoản hoặc mật khẩu không chính xác.", StatusCodes.Status401Unauthorized);
             }
 
             // 2. Kiểm tra mật khẩu bằng Argon2
             if (!Argon2.Verify(user.PasswordHash, dto.Password))
             {
-                return Unauthorized("Tài khoản hoặc mật khẩu không chính xác.");
+                throw new ApartmentManagement.Exceptions.AppException("Tài khoản hoặc mật khẩu không chính xác.", StatusCodes.Status401Unauthorized);
             }
 
             // 3. Nếu đúng, bắt đầu quy trình chế tạo Thẻ thông hành (JWT)

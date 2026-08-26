@@ -4,13 +4,15 @@ using ApartmentManagement.Enums;
 using ApartmentManagement.Repositories;
 using Microsoft.EntityFrameworkCore;
 using ApartmentManagement.Data;
+using ApartmentManagement.Exceptions;
+using Microsoft.AspNetCore.Http;
 
 namespace ApartmentManagement.Services.Impl
 {
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepository;
-        private readonly ApplicationDbContext _context; // Dùng để update trạng thái Invoice
+        private readonly ApplicationDbContext _context;
 
         public PaymentService(IPaymentRepository paymentRepository, ApplicationDbContext context)
         {
@@ -28,7 +30,7 @@ namespace ApartmentManagement.Services.Impl
                 Amount = p.Amount,
                 PaymentDate = p.PaymentDate,
                 PaymentMethod = p.PaymentMethod,
-                ReferenceCode = p.ReferenceCode // Nếu bạn đã thêm cột này vào Entity
+                ReferenceCode = p.ReferenceCode
             });
         }
 
@@ -41,22 +43,24 @@ namespace ApartmentManagement.Services.Impl
 
             if (invoice == null)
             {
-                throw new InvalidOperationException("Không tìm thấy hóa đơn cần thanh toán.");
+                // Thay bằng AppException 404
+                throw new AppException("Không tìm thấy hóa đơn cần thanh toán.", StatusCodes.Status404NotFound);
             }
 
             if (invoice.Status == InvoiceStatus.Paid)
             {
-                throw new InvalidOperationException("Hóa đơn này đã được thanh toán đầy đủ trước đó.");
+                // Thay bằng AppException 400
+                throw new AppException("Hóa đơn này đã được thanh toán đầy đủ trước đó.", StatusCodes.Status400BadRequest);
             }
 
-            // 2. TÍNH TOÁN NGĂN CHẶN THANH TOÁN LỐ (Đoạn mã mới thêm)
+            // 2. TÍNH TOÁN NGĂN CHẶN THANH TOÁN LỐ 
             decimal currentPaid = invoice.Payments?.Sum(p => p.Amount) ?? 0;
             decimal remainingDebt = invoice.TotalAmount - currentPaid;
 
             if (dto.Amount > remainingDebt)
             {
-                // Quăng lỗi ra cho Controller bắt, FE sẽ hiển thị câu thông báo này lên màn hình
-                throw new ArgumentException($"Số tiền đóng ({dto.Amount:N0}đ) đang vượt quá số nợ còn lại ({remainingDebt:N0}đ).");
+                // Thay bằng AppException 400
+                throw new AppException($"Số tiền đóng ({dto.Amount:N0}đ) đang vượt quá số nợ còn lại ({remainingDebt:N0}đ).", StatusCodes.Status400BadRequest);
             }
 
             // 3. Lưu lịch sử thanh toán

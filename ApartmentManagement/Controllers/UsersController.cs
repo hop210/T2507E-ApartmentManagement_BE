@@ -36,15 +36,8 @@ namespace ApartmentManagement.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateUserDTO dto)
         {
-            try
-            {
-                var result = await _service.CreateUserAsync(dto);
-                return Ok(new { message = "Tạo tài khoản thành công!", data = result });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var result = await _service.CreateUserAsync(dto);
+            return Ok(new { message = "Tạo tài khoản thành công!", data = result });
         }
 
         [HttpPut("{id}")]

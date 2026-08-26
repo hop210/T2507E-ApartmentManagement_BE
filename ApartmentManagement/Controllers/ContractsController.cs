@@ -33,27 +33,16 @@ namespace ApartmentManagement.Controllers
         }
 
         [HttpPost]
-        // Bắt buộc dùng [FromForm] để API có thể đọc được file đính kèm từ request
         public async Task<IActionResult> Create([FromForm] CreateContractDTO dto)
         {
-            // Validate nhẹ: Ngày bắt đầu không thể sau ngày kết thúc
             if (dto.StartDate >= dto.EndDate)
             {
+                // Validate 
                 return BadRequest("Ngày kết thúc hợp đồng phải lớn hơn ngày bắt đầu.");
             }
 
-            try
-            {
-                // Gọi xuống Service để xử lý nghiệp vụ tạo hợp đồng
-                var result = await _service.CreateContractAsync(dto);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                // Nếu Service ném ra lỗi (Ví dụ: "Cư dân này đã được xếp vào phòng..."),
-                // Lưới catch này sẽ tóm lấy và trả về mã 400 Bad Request kèm theo lời nhắn lỗi
-                return BadRequest(new { message = ex.Message });
-            }
+            var result = await _service.CreateContractAsync(dto);
+            return Ok(result);
         }
 
         [Authorize(Roles = "ADMIN,MANAGER")]
@@ -79,7 +68,7 @@ namespace ApartmentManagement.Controllers
         // Chuyển nhượng hợp đồng cho Người nhà (Tạo Chủ hộ mới, thanh lý HĐ cũ)
         // ID của người nhà sẽ được thăng cấp
         // Thông tin hợp đồng mới (kèm file PDF)
-        [Authorize(Roles = "ADMIN,MANAGER")] // Chỉ quản lý mới được phép thao tác
+        [Authorize(Roles = "ADMIN,MANAGER")]
         [HttpPost("transfer/{familyMemberId}")]
         public async Task<IActionResult> TransferContract(int familyMemberId, [FromForm] CreateContractDTO newContractDto)
         {
@@ -88,22 +77,14 @@ namespace ApartmentManagement.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                // Gọi "Super API" từ tầng Service mà chúng ta vừa viết
-                var newContract = await _service.TransferContractToFamilyMemberAsync(familyMemberId, newContractDto);
+            // XÓA try...catch, chỉ gọi Service. Nếu có lỗi, Middleware sẽ lo.
+            var newContract = await _service.TransferContractToFamilyMemberAsync(familyMemberId, newContractDto);
 
-                return Ok(new
-                {
-                    Message = "Chuyển nhượng thành công! Đã tạo chủ hộ mới và hợp đồng mới.",
-                    Data = newContract
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                // Bắt lỗi và hiển thị lên Swagger (ví dụ lỗi không đủ tuổi, không tìm thấy người nhà...)
-                return BadRequest(new { message = ex.Message });
-            }
+                Message = "Chuyển nhượng thành công! Đã tạo chủ hộ mới và hợp đồng mới.",
+                Data = newContract
+            });
         }
     }
 }
