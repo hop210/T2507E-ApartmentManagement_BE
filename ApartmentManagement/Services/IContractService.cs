@@ -9,5 +9,6 @@ namespace ApartmentManagement.Services
         Task<ContractDTO> CreateContractAsync(CreateContractDTO dto);
         Task<bool> ExtendContractAsync(int id, ExtendContractDTO dto);
         Task<bool> TerminateContractAsync(int id);
+        Task<ContractDTO> TransferContractToFamilyMemberAsync(int familyMemberId, CreateContractDTO newContractDto);
     }
 }

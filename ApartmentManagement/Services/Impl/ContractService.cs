@@ -147,6 +147,7 @@ namespace ApartmentManagement.Services.Impl
         }
 
 
+
         // Hàm phụ trợ giúp chuyển đổi Entity sang DTO cho gọn code
         private ContractDTO MapToDTO(Contract c)
         {
@@ -165,6 +166,9 @@ namespace ApartmentManagement.Services.Impl
                 DocumentUrl = c.DocumentUrl
             };
         }
+
+
+
         public async Task<bool> ExtendContractAsync(int id, ExtendContractDTO dto)
         {
             var contract = await _context.Contracts.FindAsync(id);
@@ -183,6 +187,8 @@ namespace ApartmentManagement.Services.Impl
             await _context.SaveChangesAsync();
             return true;
         }
+
+
 
         public async Task<bool> TerminateContractAsync(int id)
         {
@@ -218,6 +224,79 @@ namespace ApartmentManagement.Services.Impl
             }
             await _context.SaveChangesAsync();
             return true;
+        }
+
+
+
+        public async Task<ContractDTO> TransferContractToFamilyMemberAsync(int familyMemberId, CreateContractDTO newContractDto)
+        {
+            // Bật khiên Transaction: Thành công thì lưu tất, lỗi thì hủy hết!
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // 1. Tìm thông tin người nhà (người chuẩn bị được "thăng cấp")
+                var familyMember = await _context.FamilyMembers
+                    .Include(f => f.Resident)
+                    .FirstOrDefaultAsync(f => f.Id == familyMemberId);
+
+                if (familyMember == null || !familyMember.IsActive)
+                    throw new Exception("Không tìm thấy thông tin người nhà hoặc người này đã dọn đi.");
+
+                var oldResident = familyMember.Resident;
+                if (oldResident == null)
+                    throw new Exception("Không tìm thấy chủ hộ cũ.");
+
+                // 2. Tìm và Thanh lý hợp đồng của chủ hộ cũ
+                var oldContract = await _context.Contracts
+                    .FirstOrDefaultAsync(c => c.ResidentId == oldResident.Id && c.Status == ContractStatus.Active);
+
+                if (oldContract != null)
+                {
+                    oldContract.Status = ContractStatus.Terminated;
+                    oldContract.EndDate = DateTime.Now;
+                    _context.Contracts.Update(oldContract);
+                }
+
+                // 3. Vô hiệu hóa Chủ hộ cũ và Cấp bậc Người nhà cũ
+                oldResident.IsActive = false;
+                oldResident.ApartmentId = null; // Trả lại phòng
+                _context.Residents.Update(oldResident);
+
+                familyMember.IsActive = false; // Vô hiệu hóa vì họ sắp chuyển sinh thành Resident
+                _context.FamilyMembers.Update(familyMember);
+
+                // 4. "Chuyển sinh": Tạo Chủ hộ mới từ dữ liệu người nhà
+                var newResident = new Resident
+                {
+                    FullName = familyMember.FullName,
+                    IdentityCard = familyMember.IdentityCard,
+                    PhoneNumber = "", // Người nhà tạm thời chưa có sđt, có thể update sau
+                    ApartmentId = newContractDto.ApartmentId,
+                    IsActive = true
+                };
+                _context.Residents.Add(newResident);
+
+                // Lưu tạm để Database sinh ra cái ID cho tân chủ hộ
+                await _context.SaveChangesAsync();
+
+                // 5. Gắn ID mới vào DTO và "Tái sử dụng" luồng tạo hợp đồng xịn sò đã có
+                newContractDto.ResidentId = newResident.Id;
+
+                // Gọi lại chính hàm CreateContractAsync (có cả MinIO) để xử lý từ A-Z
+                var newContract = await CreateContractAsync(newContractDto);
+
+                // 6. Hoàn tất mĩ mãn, chốt sổ Transaction!
+                await transaction.CommitAsync();
+
+                return newContract;
+            }
+            catch (Exception ex)
+            {
+                // Có bất kỳ lỗi gì xảy ra, quay xe ngay lập tức!
+                await transaction.RollbackAsync();
+                throw new Exception($"Giao dịch thất bại, đã hoàn tác dữ liệu. Lỗi: {ex.Message}");
+            }
         }
     }
 }

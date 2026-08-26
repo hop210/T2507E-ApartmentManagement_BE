@@ -29,7 +29,7 @@ namespace ApartmentManagement.Entities
         public ContractStatus Status { get; set; } = ContractStatus.Active;
 
         [MaxLength(255)]
-        public string DocumentUrl { get; set; } = string.Empty; // Lưu tên file PDF trên MinIO nhưng hiện tại đang lưu cục bộ ở thư mục wwwroot/contracts
+        public string DocumentUrl { get; set; } = string.Empty; // Lưu đường dẫn file PDF trên MinIO
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }

@@ -20,6 +20,8 @@ namespace ApartmentManagement.Entities
 
         public ApartmentStatus Status { get; set; } = ApartmentStatus.Available;
 
+        public int MaxCapacity { get; set; } = 4;
+
         // Khóa ngoại liên kết lên Tầng
         public int FloorId { get; set; }
         [ForeignKey("FloorId")]

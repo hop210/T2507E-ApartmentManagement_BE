@@ -73,5 +73,37 @@ namespace ApartmentManagement.Controllers
             if (!result) return NotFound("Không tìm thấy hợp đồng.");
             return Ok(new { message = "Đã thanh lý hợp đồng và cập nhật trạng thái phòng thành công!" });
         }
+
+
+
+        // Chuyển nhượng hợp đồng cho Người nhà (Tạo Chủ hộ mới, thanh lý HĐ cũ)
+        // ID của người nhà sẽ được thăng cấp
+        // Thông tin hợp đồng mới (kèm file PDF)
+        [Authorize(Roles = "ADMIN,MANAGER")] // Chỉ quản lý mới được phép thao tác
+        [HttpPost("transfer/{familyMemberId}")]
+        public async Task<IActionResult> TransferContract(int familyMemberId, [FromForm] CreateContractDTO newContractDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                // Gọi "Super API" từ tầng Service mà chúng ta vừa viết
+                var newContract = await _service.TransferContractToFamilyMemberAsync(familyMemberId, newContractDto);
+
+                return Ok(new
+                {
+                    Message = "Chuyển nhượng thành công! Đã tạo chủ hộ mới và hợp đồng mới.",
+                    Data = newContract
+                });
+            }
+            catch (Exception ex)
+            {
+                // Bắt lỗi và hiển thị lên Swagger (ví dụ lỗi không đủ tuổi, không tìm thấy người nhà...)
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

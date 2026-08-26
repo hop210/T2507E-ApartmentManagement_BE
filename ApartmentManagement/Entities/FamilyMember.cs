@@ -17,10 +17,12 @@ namespace ApartmentManagement.Entities
         public string FullName { get; set; } = string.Empty;
 
         [MaxLength(50)]
-        public string Relationship { get; set; } = string.Empty; // Vợ, Chồng, Con, Anh/Chị...
+        public string Relationship { get; set; } = string.Empty; // Vợ, Chồng, Con, Anh/Chị, Bạn bè,...
 
         [MaxLength(20)]
         public string IdentityCard { get; set; } = string.Empty; // CCCD (nếu có)
+
+        public bool IsActive { get; set; } = true;
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
