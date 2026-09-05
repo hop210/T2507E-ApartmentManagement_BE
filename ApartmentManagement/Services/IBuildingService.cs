@@ -4,6 +4,7 @@ namespace ApartmentManagement.Services
 {
     public interface IBuildingService
     {
+        Task<BuildingTreeDTO?> GetBuildingTreeAsync(int id);
         Task<IEnumerable<BuildingDTO>> GetAllBuildingsAsync();
         Task<BuildingDTO> CreateBuildingAsync(CreateBuildingDTO dto);
     }

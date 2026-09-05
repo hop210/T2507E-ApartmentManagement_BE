@@ -17,11 +17,24 @@ public class BuildingsController : ControllerBase
             _service = service;
         }
 
+        // Lấy danh sách nhẹ (Dành cho bảng)
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var buildings = await _service.GetAllBuildingsAsync();
             return Ok(buildings);
+        }
+
+        // API ĐẶC BIỆT: Lấy toàn bộ sơ đồ (Dành cho việc vẽ cây thư mục)
+        [HttpGet("{id}/tree")]
+        public async Task<IActionResult> GetBuildingTree(int id)
+        {
+            var tree = await _service.GetBuildingTreeAsync(id);
+            if (tree == null)
+            {
+                throw new ApartmentManagement.Exceptions.AppException("Không tìm thấy tòa nhà.", StatusCodes.Status404NotFound);
+            }
+            return Ok(tree);
         }
 
         [HttpPost]

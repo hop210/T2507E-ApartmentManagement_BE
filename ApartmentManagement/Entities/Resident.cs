@@ -24,5 +24,6 @@ namespace ApartmentManagement.Entities
         public int? ApartmentId { get; set; }
         [ForeignKey("ApartmentId")]
         public Apartment? Apartment { get; set; }
+        public ICollection<FamilyMember>? FamilyMembers { get; set; }
     }
 }
